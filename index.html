@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Compression Tool</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            padding: 40px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #D3CAE2, #E6C17A);
+            color: #404041;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .light-mode {
+            background-color: #F6EDE3;
+            color: #404041;
+        }
+
+        .dark-mode {
+            background-color: #121212;
+            color: #FFFFFF;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background-color: #FFFFFF;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: background-color 0.3s ease;
+            overflow: hidden;
+        }
+
+        .dark-mode .container {
+            background-color: #333;
+            color: #FFFFFF;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .toggle-button {
+            background-color: #E6C17A;
+            color: #404041;
+            transition: background-color 0.3s ease;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+
+        .dark-mode .toggle-button {
+            background-color: #E6C17A;
+            color: #FFFFFF;
+        }
+
+        .toggle-button:hover {
+            background-color: #D3CAE2;
+        }
+
+        .compress-button, .reset-button {
+            background-color: #E6C17A;
+            color: white;
+            transition: background-color 0.3s ease;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 48%;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
+        .dark-mode .compress-button, .dark-mode .reset-button {
+            background-color: #E6C17A;
+            color: #FFFFFF;
+        }
+
+        .compress-button:hover, .reset-button:hover {
+            background-color: #D3CAE2;
+        }
+
+        .image-upload-area {
+            width: 100%;
+            padding: 20px;
+            border: 2px dashed #404041;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .dark-mode .image-upload-area {
+            border-color: #FFFFFF;
+        }
+
+        .image-upload-area:hover {
+            background-color: rgba(64, 64, 64, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .image-upload-area input {
+            display: none;
+        }
+
+        .image-upload-area label {
+            font-size: 18px;
+            color: #404041;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .dark-mode .image-upload-area label {
+            color: #FFFFFF;
+        }
+
+        .image-upload-area label:hover {
+            color: #E6C17A;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            border-radius: 8px;
+            border: 2px solid #404041;
+            font-size: 16px;
+            color: #404041;
+            transition: border-color 0.3s ease;
+        }
+
+        .dark-mode input[type="number"] {
+            border-color: #FFFFFF;
+            color: #FFFFFF;
+            background-color: #333;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #E6C17A;
+        }
+
+        .result {
+            margin-top: 20px;
+            text-align: left;
+            overflow: auto;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .dark-mode .result {
+            background-color: #444;
+            color: #FFFFFF;
+        }
+
+        .result-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .result-card {
+            flex: 1 1 calc(48% - 10px);
+            margin: 5px;
+            border: 1px solid #404041;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode .result-card {
+            background-color: #555;
+            border-color: #FFFFFF;
+        }
+
+        .result img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .download-button {
+            background-color: #E6C17A;
+            color: white;
+            transition: background-color 0.3s ease;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: block;
+            margin: 10px auto;
+            text-align: center;
+        }
+
+        .dark-mode .download-button {
+            background-color: #E6C17A;
+            color: #FFFFFF;
+        }
+
+        .download-button:hover {
+            background-color: #D3CAE2;
+        }
+
+        .loading {
+            display: none;
+            font-size: 20px;
+            color: #E6C17A;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body class="light-mode" id="body">
+    <div class="container">
+        <h1>Image Compression Tool</h1>
+        <button id="toggleButton" class="toggle-button">☀️ Toggle Dark Mode</button>
+        <div class="upload-card">
+            <form id="uploadForm" method="POST" enctype="multipart/form-data">
+                <div class="image-upload-area" id="uploadArea">
+                    <input type="file" name="files" id="file" multiple required>
+                    <label for="file" id="fileLabel">Drag & Drop your images here or click to select</label>
+                </div>
+                <label for="quality">Desired Compression Quality (1-100):</label>
+                <input type="number" name="quality" id="quality" min="1" max="100" value="85" required>
+                <div style="display: flex; justify-content: space-between;">
+                    <button type="submit" class="compress-button">Compress Images</button>
+                    <button type="button" class="reset-button" id="resetButton">Reset</button>
+                </div>
+            </form>
+            <div class="loading" id="loadingIndicator">Compressing images, please wait...</div>
+        </div>
+        <div class="result" id="resultContainer" style="display: none;">
+            <h2>Compression Results</h2>
+            <div id="results" class="result-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle Dark Mode
+        const toggleButton = document.getElementById('toggleButton');
+        const body = document.getElementById('body');
+
+        toggleButton.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            toggleButton.textContent = body.classList.contains('dark-mode') ? '🌙 Toggle Light Mode' : '☀️ Toggle Dark Mode';
+        });
+
+        // Show selected file names
+        const fileInput = document.getElementById('file');
+        const fileLabel = document.getElementById('fileLabel');
+
+        fileInput.addEventListener('change', (event) => {
+            const files = event.target.files;
+            fileLabel.textContent = files.length > 0 ? `Selected files: ${Array.from(files).map(file => file.name).join(', ')}` : 'Drag & Drop your images here or click to select';
+        });
+
+        // Handle drag and drop
+        const uploadArea = document.getElementById('uploadArea');
+
+        uploadArea.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            uploadArea.style.backgroundColor = 'rgba(64, 64, 64, 0.1)';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.backgroundColor = '';
+        });
+
+        uploadArea.addEventListener('drop', (event) => {
+            event.preventDefault();
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files; // Set the files to the input
+                fileLabel.textContent = `Selected files: ${Array.from(files).map(file => file.name).join(', ')}`;
+            }
+            uploadArea.style.backgroundColor = '';
+        });
+
+        // Handle form submission
+        const uploadForm = document.getElementById('uploadForm');
+        const resultContainer = document.getElementById('resultContainer');
+        const resultsDiv = document.getElementById('results');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+
+        uploadForm.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent the default form submission
+
+            const formData = new FormData(uploadForm);
+            loadingIndicator.style.display = 'block'; // Show loading indicator
+
+            try {
+                const response = await fetch('/compress', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while compressing the images.');
+            } finally {
+                loadingIndicator.style.display = 'none'; // Hide loading indicator
+            }
+        });
+
+        function displayResults(data) {
+            resultsDiv.innerHTML = ''; // Clear previous results
+            if (!Array.isArray(data) || data.length === 0) {
+                resultsDiv.innerHTML = '<p>No images were compressed.</p>';
+                resultContainer.style.display = 'block'; // Show the results container
+                return;
+            }
+            data.forEach(item => {
+                const originalSize = (item.originalSize / (1024 * 1024)).toFixed(2); // Convert to MB
+                const compressedSize = (item.compressedSize / (1024 * 1024)).toFixed(2); // Convert to MB
+
+                const resultHTML = `
+                    <div class="result-card">
+                        <h3>Original Image</h3>
+                        <img src="${item.originalUrl}" alt="Original Image">
+                        <p>Size: ${originalSize} MB</p>
+                    </div>
+                    <div class="result-card">
+                        <h3>Compressed Image</h3>
+                        <img src="${item.compressedUrl}" alt="Compressed Image">
+                        <p>Size: ${compressedSize} MB</p>
+                        <a href="${item.compressedUrl}" download class="download-button" onclick="resetForm()">Download Compressed Image</a>
+                    </div>
+                `;
+                resultsDiv.innerHTML += resultHTML;
+            });
+            resultContainer.style.display = 'block'; // Show the results container
+        }
+
+        // Reset form function
+        function resetForm() {
+            // Clear the file input
+            fileInput.value = '';
+            fileLabel.textContent = 'Drag & Drop your images here or click to select'; // Reset label
+            document.getElementById('quality').value = 85; // Reset quality input to default
+            resultsDiv.innerHTML = ''; // Clear previous results
+            resultContainer.style.display = 'none'; // Hide results container
+        }
+
+        // Reset button functionality
+        const resetButton = document.getElementById('resetButton');
+
+        resetButton.addEventListener('click', () => {
+            resetForm(); // Call the resetForm function
+        });
+    </script>
+</body>
+</html>
